@@ -202,7 +202,7 @@ function TurtleUI:CreateWindow(config)
 
     -- Content area
     local Content = newFrame(Win, UDim2.new(1,-16,1,-94), UDim2.fromOffset(8,86), T.BG, 2)
-    Content.ClipsDescendants = true
+    Content.ClipsDescendants = false
     W.Content = Content
 
     -- Animate open
@@ -393,19 +393,20 @@ function TurtleUI:CreateWindow(config)
                 local val = config.Default or false
                 local cb = config.Callback or function() end
 
-                local Row = newFrame(Items, UDim2.new(1,0,0,34), nil, T.BG2, 5)
-                corner(Row, 7)
+                local Row = Instance.new("TextButton")
+                Row.Size = UDim2.new(1,0,0,34)
+                Row.BackgroundColor3 = T.BG2
                 Row.BackgroundTransparency = 1
+                Row.Text = ""
+                Row.BorderSizePixel = 0
+                Row.ZIndex = 5
+                Row.AutoButtonColor = false
+                Row.Parent = Items
+                corner(Row, 7)
 
                 local RowLabel = newLabel(Row, config.Text or id, UDim2.new(1,-52,1,0), T.Text, Enum.Font.Gotham, Enum.TextXAlignment.Left, 6)
                 RowLabel.Position = UDim2.fromOffset(10,0)
                 RowLabel.TextSize = 11
-
-                if config.Tooltip then
-                    local tip = newLabel(Row, "?", UDim2.fromOffset(14,14), T.TextMuted, Enum.Font.GothamBold, Enum.TextXAlignment.Center, 6)
-                    tip.Position = UDim2.new(1,-52,0.5,-7)
-                    tip.TextSize = 9
-                end
 
                 -- Toggle pill
                 local Pill = newFrame(Row, UDim2.fromOffset(36,20), UDim2.new(1,-46,0.5,-10), T.BG3, 6)
@@ -437,15 +438,8 @@ function TurtleUI:CreateWindow(config)
                 function TogObj:GetValue() return val end
                 W.Toggles[id] = TogObj
 
-                Pill.InputBegan:Connect(function(inp)
-                    if inp.UserInputType == Enum.UserInputType.MouseButton1 then
-                        SetToggle(not val)
-                    end
-                end)
-                Row.InputBegan:Connect(function(inp)
-                    if inp.UserInputType == Enum.UserInputType.MouseButton1 then
-                        SetToggle(not val)
-                    end
+                Row.MouseButton1Click:Connect(function()
+                    SetToggle(not val)
                 end)
                 Row.MouseEnter:Connect(function() tween(Row, {BackgroundTransparency=0, BackgroundColor3=T.BG3}) end)
                 Row.MouseLeave:Connect(function() tween(Row, {BackgroundTransparency=1}) end)
@@ -461,9 +455,16 @@ function TurtleUI:CreateWindow(config)
                 local rounding = config.Rounding or 0
                 local cb = config.Callback or function() end
 
-                local Row = newFrame(Items, UDim2.new(1,0,0,48), nil, T.BG2, 5)
-                corner(Row, 7)
+                local Row = Instance.new("TextButton")
+                Row.Size = UDim2.new(1,0,0,48)
+                Row.BackgroundColor3 = T.BG2
                 Row.BackgroundTransparency = 1
+                Row.Text = ""
+                Row.BorderSizePixel = 0
+                Row.ZIndex = 5
+                Row.AutoButtonColor = false
+                Row.Parent = Items
+                corner(Row, 7)
 
                 local RowLabel = newLabel(Row, config.Text or id, UDim2.new(0.6,0,0,18), T.Text, Enum.Font.Gotham, Enum.TextXAlignment.Left, 6)
                 RowLabel.Position = UDim2.fromOffset(10,6)
@@ -578,9 +579,16 @@ function TurtleUI:CreateWindow(config)
                 local val = config.Default or ""
                 local cb = config.Callback or function() end
 
-                local Row = newFrame(Items, UDim2.new(1,0,0,52), nil, T.BG2, 5)
-                corner(Row, 7)
+                local Row = Instance.new("TextButton")
+                Row.Size = UDim2.new(1,0,0,52)
+                Row.BackgroundColor3 = T.BG2
                 Row.BackgroundTransparency = 1
+                Row.Text = ""
+                Row.BorderSizePixel = 0
+                Row.ZIndex = 5
+                Row.AutoButtonColor = false
+                Row.Parent = Items
+                corner(Row, 7)
 
                 local RowLabel = newLabel(Row, config.Text or id, UDim2.new(1,0,0,16), T.TextDim, Enum.Font.GothamBold, Enum.TextXAlignment.Left, 6)
                 RowLabel.Position = UDim2.fromOffset(10,6)
@@ -636,10 +644,17 @@ function TurtleUI:CreateWindow(config)
                 local cb = config.Callback or function() end
                 local open = false
 
-                local Wrapper = newFrame(Items, UDim2.new(1,0,0,52), nil, T.BG2, 5)
+                local Wrapper = Instance.new("TextButton")
+                Wrapper.Size = UDim2.new(1,0,0,52)
                 Wrapper.AutomaticSize = Enum.AutomaticSize.Y
-                corner(Wrapper, 7)
+                Wrapper.BackgroundColor3 = T.BG2
                 Wrapper.BackgroundTransparency = 1
+                Wrapper.Text = ""
+                Wrapper.BorderSizePixel = 0
+                Wrapper.ZIndex = 5
+                Wrapper.AutoButtonColor = false
+                Wrapper.Parent = Items
+                corner(Wrapper, 7)
 
                 local RowLabel = newLabel(Wrapper, config.Text or id, UDim2.new(1,0,0,16), T.TextDim, Enum.Font.GothamBold, Enum.TextXAlignment.Left, 6)
                 RowLabel.Position = UDim2.fromOffset(10,6)
@@ -754,9 +769,16 @@ function TurtleUI:CreateWindow(config)
                 local cb = config.Callback or function() end
                 local listening = false
 
-                local Row = newFrame(Items, UDim2.new(1,0,0,34), nil, T.BG2, 5)
-                corner(Row, 7)
+                local Row = Instance.new("TextButton")
+                Row.Size = UDim2.new(1,0,0,34)
+                Row.BackgroundColor3 = T.BG2
                 Row.BackgroundTransparency = 1
+                Row.Text = ""
+                Row.BorderSizePixel = 0
+                Row.ZIndex = 5
+                Row.AutoButtonColor = false
+                Row.Parent = Items
+                corner(Row, 7)
 
                 local RowLabel = newLabel(Row, config.Text or id, UDim2.new(1,-80,1,0), T.Text, Enum.Font.Gotham, Enum.TextXAlignment.Left, 6)
                 RowLabel.Position = UDim2.fromOffset(10,0)
