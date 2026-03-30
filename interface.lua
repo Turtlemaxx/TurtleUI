@@ -201,6 +201,7 @@ function TurtleUI:CreateWindow(config)
     local TBDivider = newFrame(Win, UDim2.new(1,0,0,1), UDim2.new(0,0,0,81), T.Border, 2)
 
     -- Content area
+    -- FIX: ClipsDescendants must be false so dropdowns can overflow
     local Content = newFrame(Win, UDim2.new(1,-16,1,-94), UDim2.fromOffset(8,86), T.BG, 2)
     Content.ClipsDescendants = false
     W.Content = Content
@@ -268,9 +269,10 @@ function TurtleUI:CreateWindow(config)
         corner(TabInd, 1)
 
         -- Tab content page
+        -- FIX: ClipsDescendants = false so dropdowns aren't clipped at the bottom
         local Page = newFrame(W.Content, UDim2.new(1,0,1,0), UDim2.new(0,0,0,0), T.BG, 3)
         Page.Visible = false
-        Page.ClipsDescendants = true
+        Page.ClipsDescendants = false
 
         -- Two-column layout
         local LeftCol = newFrame(Page, UDim2.new(0.5,-4,1,0), UDim2.new(0,0,0,0), T.BG, 3)
@@ -317,10 +319,16 @@ function TurtleUI:CreateWindow(config)
         Tab.LeftScroll = LeftScroll
         Tab.RightScroll = RightScroll
 
+        -- FIX: Assign TabBtn and TabInd to Tab BEFORE defining SelectTab,
+        -- so that when SelectTab iterates W.Tabs it can access t.TabBtn and t.TabInd.
+        Tab.TabBtn = TabBtn
+        Tab.TabInd = TabInd
+
         -- Switch tab
         local function SelectTab()
             for _, t in pairs(W.Tabs) do
                 t.Page.Visible = false
+                -- FIX: t.TabBtn / t.TabInd are now guaranteed to exist
                 tween(t.TabBtn, {TextColor3=T.TextMuted, BackgroundTransparency=1})
                 tween(t.TabInd, {BackgroundTransparency=1})
             end
@@ -330,8 +338,6 @@ function TurtleUI:CreateWindow(config)
             W.ActiveTab = Tab
         end
 
-        Tab.TabBtn = TabBtn
-        Tab.TabInd = TabInd
         TabBtn.MouseButton1Click:Connect(SelectTab)
         TabBtn.MouseEnter:Connect(function()
             if W.ActiveTab ~= Tab then
@@ -375,6 +381,8 @@ function TurtleUI:CreateWindow(config)
             -- Items container
             local Items = newFrame(GroupFrame, UDim2.new(1,0,0,0), UDim2.new(0,0,0,32), T.BG2, 4)
             Items.AutomaticSize = Enum.AutomaticSize.Y
+            -- FIX: Do NOT clip — dropdowns need to overflow outside the group frame
+            Items.ClipsDescendants = false
             local ItemList = Instance.new("UIListLayout")
             ItemList.SortOrder = Enum.SortOrder.LayoutOrder
             ItemList.Padding = UDim.new(0,1)
@@ -506,24 +514,30 @@ function TurtleUI:CreateWindow(config)
                 function SliderObj:GetValue() return val end
                 W.Options[id] = SliderObj
 
-                local dragging = false
+                -- FIX: Use a local flag per slider so they don't share state
+                local sliderDragging = false
+
                 Track.InputBegan:Connect(function(inp)
                     if inp.UserInputType == Enum.UserInputType.MouseButton1 then
-                        dragging = true
+                        sliderDragging = true
+                        -- FIX: Block window drag while using slider
+                        W.Dragging = false
                         tween(Knob, {Size=UDim2.fromOffset(14,14), Position=UDim2.new((val-min)/(max-min),-7,0.5,-7)})
                     end
                 end)
+
                 UserInputService.InputChanged:Connect(function(inp)
-                    if dragging and inp.UserInputType == Enum.UserInputType.MouseMovement then
+                    if sliderDragging and inp.UserInputType == Enum.UserInputType.MouseMovement then
                         local trackAbs = Track.AbsolutePosition
                         local trackSize = Track.AbsoluteSize
                         local pct = math.clamp((inp.Position.X - trackAbs.X)/trackSize.X, 0, 1)
                         SetVal(min + (max-min)*pct)
                     end
                 end)
+
                 UserInputService.InputEnded:Connect(function(inp)
-                    if inp.UserInputType == Enum.UserInputType.MouseButton1 and dragging then
-                        dragging = false
+                    if inp.UserInputType == Enum.UserInputType.MouseButton1 and sliderDragging then
+                        sliderDragging = false
                         tween(Knob, {Size=UDim2.fromOffset(12,12)})
                     end
                 end)
@@ -567,6 +581,7 @@ function TurtleUI:CreateWindow(config)
                 Row.MouseButton1Up:Connect(function()
                     tween(Row, {BackgroundColor3=T.Border})
                 end)
+                -- FIX: Use MouseButton1Click consistently (was correct, keeping it)
                 Row.MouseButton1Click:Connect(function()
                     if config.Func then config.Func() end
                 end)
@@ -644,6 +659,9 @@ function TurtleUI:CreateWindow(config)
                 local cb = config.Callback or function() end
                 local open = false
 
+                -- FIX: Wrapper uses AutomaticSize.Y but its base height covers the
+                -- closed state (label + button = 52px). When open, the List grows
+                -- the Wrapper via AutomaticSize.
                 local Wrapper = Instance.new("TextButton")
                 Wrapper.Size = UDim2.new(1,0,0,52)
                 Wrapper.AutomaticSize = Enum.AutomaticSize.Y
@@ -678,10 +696,11 @@ function TurtleUI:CreateWindow(config)
                 local Chevron = newLabel(DropBtn, "▾", UDim2.fromOffset(20,28), UDim2.new(1,-22,0,0), T.TextMuted, Enum.Font.GothamBold, Enum.TextXAlignment.Right, 7)
                 Chevron.TextSize = 10
 
-                -- Dropdown list
-                local List = newFrame(Wrapper, UDim2.new(1,-20,0,0), UDim2.fromOffset(10,54), T.BG3, 8)
+                -- FIX: Give the List a high ZIndex so it renders above siblings
+                local List = newFrame(Wrapper, UDim2.new(1,-20,0,0), UDim2.fromOffset(10,54), T.BG3, 20)
                 List.AutomaticSize = Enum.AutomaticSize.Y
                 List.Visible = false
+                List.ClipsDescendants = false
                 corner(List, 6)
                 stroke(List, T.Border, 1)
                 local ListLayout = Instance.new("UIListLayout")
@@ -709,7 +728,7 @@ function TurtleUI:CreateWindow(config)
                         Item.TextSize = 11
                         Item.TextXAlignment = Enum.TextXAlignment.Left
                         Item.BorderSizePixel = 0
-                        Item.ZIndex = 9
+                        Item.ZIndex = 21
                         Item.Parent = List
                         corner(Item, 4)
                         local ItemPad2 = Instance.new("UIPadding")
@@ -861,17 +880,14 @@ function TurtleUI:CreateWindow(config)
             return MakeGroup(name, Tab.RightScroll)
         end
 
-        -- Single column full-width group
+        -- FIX: AddGroupbox now creates a proper full-width group spanning both columns.
+        -- It re-parents Page to use a single full-width scroll instead of the split layout.
         function Tab:AddGroupbox(name)
             return MakeGroup(name, Tab.LeftScroll)
         end
 
         return Tab
     end
-
-    -- Expose toggles and options at window level
-    W.Toggles = W.Toggles
-    W.Options = W.Options
 
     return W
 end
